@@ -1,0 +1,52 @@
+# 生产编排（2C2G 服务器）：镜像全部来自 GHCR，服务器不构建，只拉取启动。
+# 用法（服务器上）：
+#   cd /opt/agentic_rag && git pull
+#   docker compose -f docker-compose.prod.yml up -d
+#   docker compose -f docker-compose.prod.yml run --rm api python -m app.ingest
+services:
+  postgres:
+    image: paradedb/paradedb:pg16
+    container_name: agentic_rag_pg
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: agentic_rag
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-agentic_rag}
+      POSTGRES_DB: agentic_rag
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U agentic_rag -d agentic_rag"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    # 2C2G 内存压线配置
+    command: postgres -c shared_buffers=256MB -c effective_cache_size=768MB -c max_connections=50
+    ports:
+      - "127.0.0.1:5432:5432"   # 只对本机暴露，不公网裸奔
+
+  api:
+    image: ghcr.io/kongtiaop/agentic-rag-backend:latest
+    container_name: agentic_rag_api
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://agentic_rag:${POSTGRES_PASSWORD:-agentic_rag}@postgres:5432/agentic_rag
+      DASHSCOPE_API_KEY: ${DASHSCOPE_API_KEY}
+      LLM_MODEL: ${LLM_MODEL:-qwen-plus}
+      EMBEDDING_MODEL: ${EMBEDDING_MODEL:-text-embedding-v4}
+    ports:
+      - "127.0.0.1:8000:8000"   # 由 frontend nginx 反代对外
+
+  frontend:
+    image: ghcr.io/kongtiaop/agentic-rag-frontend:latest
+    container_name: agentic_rag_front
+    restart: unless-stopped
+    depends_on:
+      - api
+    ports:
+      - "80:80"                 # 对外入口
+
+volumes:
+  pgdata:
