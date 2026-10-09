@@ -8,6 +8,7 @@ on:
 env:
   BACKEND_IMAGE: ghcr.io/kongtiaop/agentic-rag-backend
   FRONTEND_IMAGE: ghcr.io/kongtiaop/agentic-rag-frontend
+  POSTGRES_IMAGE: ghcr.io/kongtiaop/agentic-rag-postgres
 
 jobs:
   build:
@@ -34,6 +35,12 @@ jobs:
           tags: ${{ env.BACKEND_IMAGE }}:latest,${{ env.BACKEND_IMAGE }}:${{ github.sha }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+      - name: Mirror postgres image to GHCR (国内服务器拉不动 Docker Hub，统一走 GHCR)
+        run: |
+          docker pull paradedb/paradedb:pg16
+          docker tag paradedb/paradedb:pg16 ${{ env.POSTGRES_IMAGE }}:pg16
+          docker push ${{ env.POSTGRES_IMAGE }}:pg16
 
       - name: Build & push frontend
         uses: docker/build-push-action@v6

@@ -5,7 +5,7 @@
 #   docker compose -f docker-compose.prod.yml run --rm api python -m app.ingest
 services:
   postgres:
-    image: paradedb/paradedb:pg16
+    image: ghcr.io/kongtiaop/agentic-rag-postgres:pg16   # Actions 从 paradedb/paradedb:pg16 中转，服务器只认 GHCR
     container_name: agentic_rag_pg
     restart: unless-stopped
     environment:
