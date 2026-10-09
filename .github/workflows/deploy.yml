@@ -59,14 +59,14 @@ jobs:
 
       # 国内服务器访问 github.com 不稳定：不用 git pull，
       # compose 文件由 Actions 直接 scp 上去（镜像走 GHCR，代码在镜像里，服务器无需仓库）
-      - name: Upload compose file
+      - name: Upload compose file + docs corpus
         uses: appleboy/scp-action@v1
         with:
           host: ${{ secrets.SERVER_HOST }}
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SERVER_SSH_KEY }}
           port: ${{ secrets.SERVER_PORT || 22 }}
-          source: docker-compose.prod.yml
+          source: "docker-compose.prod.yml,docs"
           target: /opt/agentic_rag
 
       - name: SSH deploy (pull images + incremental ingest + health check)

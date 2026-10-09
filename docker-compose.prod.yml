@@ -38,6 +38,8 @@ services:
       EMBEDDING_MODEL: ${EMBEDDING_MODEL:-text-embedding-v4}
     ports:
       - "127.0.0.1:8000:8000"   # 由 frontend nginx 反代对外
+    volumes:
+      - ./docs:/app/docs        # 摄取语料：由 CI scp 同步，服务器无需 git
 
   frontend:
     image: ghcr.io/kongtiaop/agentic-rag-frontend:latest
