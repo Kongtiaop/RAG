@@ -20,3 +20,6 @@ logs/
 .playwright-report/
 test-results/
 *.log
+runs.json
+jobid.txt
+deploy.log
