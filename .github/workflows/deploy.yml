@@ -48,6 +48,20 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v4
+
+      # 国内服务器访问 github.com 不稳定：不用 git pull，
+      # compose 文件由 Actions 直接 scp 上去（镜像走 GHCR，代码在镜像里，服务器无需仓库）
+      - name: Upload compose file
+        uses: appleboy/scp-action@v1
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          port: ${{ secrets.SERVER_PORT || 22 }}
+          source: docker-compose.prod.yml
+          target: /opt/agentic_rag
+
       - name: SSH deploy (pull images + incremental ingest + health check)
         uses: appleboy/ssh-action@v1
         with:
@@ -58,8 +72,6 @@ jobs:
           script: |
             set -e
             cd /opt/agentic_rag
-            git pull --ff-only
-            # 私有 GHCR 镜像：服务器需已 docker login ghcr.io（见 docs/DEPLOY.md）
             docker compose -f docker-compose.prod.yml pull
             docker compose -f docker-compose.prod.yml up -d --remove-orphans
             sleep 5
