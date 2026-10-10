@@ -74,3 +74,9 @@ body { margin: 0; font-family: system-ui, "Segoe UI", "Microsoft YaHei", sans-se
 .cite-heading { color: var(--muted); flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .cite-score { color: var(--muted); font-size: 11px; font-family: ui-monospace, monospace; }
 .cite-snippet { padding: 8px 12px; border-top: 1px solid var(--border); max-height: 220px; overflow-y: auto; background: var(--bg); font-size: 12px; }
+
+/* 顶栏二级 tab（blog/basics）与回放页返回按钮 */
+.tab.sub { margin-left: -4px; border-left: none; border-radius: 0 16px 16px 0; }
+.tabs .tab:not(.sub):not(:first-child) { margin-left: 8px; }
+.back-btn { border: 1px solid var(--border); background: var(--panel); border-radius: 8px; padding: 5px 14px; cursor: pointer; font-size: 13px; margin-bottom: 14px; }
+.back-btn:hover { border-color: var(--accent); color: var(--accent); }

@@ -54,16 +54,42 @@ export async function getDoc(docId: string): Promise<DocFull> {
   return r.json();
 }
 
+export interface RunSummary {
+  run_id: string;
+  question: string;
+  tool_call_count: number;
+  duration_ms: number;
+  started_at: string;
+}
+
+export interface RunDetail extends RunSummary {
+  answer: string;
+  citations: Citation[];
+  steps: StepInfo[];
+}
+
+export async function listRuns(limit = 30): Promise<RunSummary[]> {
+  const r = await fetch(`/api/runs?limit=${limit}`);
+  return r.json();
+}
+
+export async function getRun(runId: string): Promise<RunDetail> {
+  const r = await fetch(`/api/runs/${runId}`);
+  if (!r.ok) throw new Error(await r.text());
+  return r.json();
+}
+
 /** POST /chat 并解析 SSE 流：onStep 工具步骤、onToken 回答增量；resolve 于 answer 事件。 */
 export async function streamChat(
   question: string,
+  history: { role: string; content: string }[],
   onStep: (s: StepInfo) => void,
   onToken: (text: string) => void
 ): Promise<{ run_id: string; citations: Citation[]; duration_ms: number; truncated: boolean }> {
   const resp = await fetch("/api/chat", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ question }),
+    body: JSON.stringify({ question, history }),
   });
   if (!resp.body) throw new Error("no stream body");
 
