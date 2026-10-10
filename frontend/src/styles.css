@@ -80,3 +80,9 @@ body { margin: 0; font-family: system-ui, "Segoe UI", "Microsoft YaHei", sans-se
 .tabs .tab:not(.sub):not(:first-child) { margin-left: 8px; }
 .back-btn { border: 1px solid var(--border); background: var(--panel); border-radius: 8px; padding: 5px 14px; cursor: pointer; font-size: 13px; margin-bottom: 14px; }
 .back-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+/* 气泡头部 tab（对话/历史切换）与历史返回按钮 */
+.bubble-head { display: flex; align-items: center; gap: 6px; padding: 8px 10px; }
+.head-tab { border: 1px solid var(--border); background: transparent; border-radius: 12px; padding: 3px 12px; font-size: 12px; cursor: pointer; color: var(--muted); }
+.head-tab.active { background: var(--accent-soft); color: var(--accent); border-color: var(--accent); }
+.head-note { margin-left: auto; font-size: 11px; color: var(--muted); }

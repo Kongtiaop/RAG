@@ -27,3 +27,7 @@
 - M4 ✅ Trace 持久化（chat_runs + trace_steps 落 PG）+ /runs 回放端点 + 守卫测试 G0~G6（容器内真实链路断言）。
 - M5 ✅ React 前端（悬浮气泡 + 文章阅读页 + 链路时间线）+ 真流式（token 事件 + 打字机）
 - 部署 ✅ http://47.107.167.9/（2C2G 阿里云）：GHCR 镜像 + Actions scp/ssh 部署 + 增量摄取，E2E 验收通过。坑与修法见 docs/DEPLOY.md。
+
+## 工作纪律（项目）
+- **git push 协作规则（用户明确要求，2026-10-10）**：push 尝试约 2 分钟无动静（沙箱代理黑洞 POST 是常态，GET/ls-remote 正常）→ 不要无限重试挂后台，直接提醒用户手动推送，命令固定为：`cd C:/Users/tx360/WorkBuddy/agentic_rag && git push`。提交永远先在本地完成，push 只是运输。
+- 验证推送是否成功用 `git ls-remote origin main` 对比 HEAD，不要信 push 的表面输出。
