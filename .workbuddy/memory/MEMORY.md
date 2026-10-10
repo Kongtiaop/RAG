@@ -25,4 +25,5 @@
 - M2 ✅ reference 12 篇 + blog 7 篇 + basics 20 篇（检索语料 27 篇）
 - M3 ✅ 后端全链路：混合检索（pgvector+BM25/jieba，RRF）+ FastAPI（/chat SSE /documents）+ Agent tool_call（qwen-plus ≤6步）+ MCP Server——E2E 实测通过。运行命令与已知坑见 backend/README.md。
 - M4 ✅ Trace 持久化（chat_runs + trace_steps 落 PG）+ /runs 回放端点 + 守卫测试 G0~G6（容器内真实链路断言）。
-- M5 ⬜ React 前端（悬浮气泡 + 文章阅读页 + 链路时间线）
+- M5 ✅ React 前端（悬浮气泡 + 文章阅读页 + 链路时间线）+ 真流式（token 事件 + 打字机）
+- 部署 ✅ http://47.107.167.9/（2C2G 阿里云）：GHCR 镜像 + Actions scp/ssh 部署 + 增量摄取，E2E 验收通过。坑与修法见 docs/DEPLOY.md。

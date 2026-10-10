@@ -1,25 +1,31 @@
-"""MCP Server（stdio）：把三个检索工具暴露给任意 MCP 客户端（FastMCP，mcp 1.x）。
+"""MCP Server：把三个检索工具暴露给任意 MCP 客户端（FastMCP，mcp 1.x）。
 
-运行：cd backend && docker compose run --rm -T api python -m app.mcp_server
-MCP 客户端配置示例（mcp.json）：
-{
-  "mcpServers": {
-    "agentic-rag": {
-      "command": "docker",
-      "args": ["compose", "--project-directory", "<backend绝对路径>",
-               "run", "--rm", "-T", "api", "python", "-m", "app.mcp_server"]
-    }
-  }
-}
-注：mcp 2.x 已把 FastMCP 更名为 MCPServer，本项目钉在 mcp<2；升级时按官方迁移指南调整。
+两种传输：
+- stdio（默认，本地/同机客户端）：
+    cd backend && docker compose run --rm -T api python -m app.mcp_server
+- streamable-http（远程客户端，如 WorkBuddy / Claude Desktop）：
+    MCP_TRANSPORT=streamable-http MCP_PORT=9001 python -m app.mcp_server
+    服务路径 /mcp/，生产环境由 nginx 加 X-MCP-Token 门禁后对外。
+
+注：mcp 2.x 已把 FastMCP 更名为 MCPServer，本项目钉在 mcp<2。
 """
 from __future__ import annotations
 
 import json
+import os
 
 from mcp.server.fastmcp import FastMCP
 
-mcp = FastMCP("agentic-rag")
+TRANSPORT = os.environ.get("MCP_TRANSPORT", "stdio")
+MCP_PORT = int(os.environ.get("MCP_PORT", "9001"))
+
+mcp = FastMCP(
+    "agentic-rag",
+    host="0.0.0.0" if TRANSPORT == "streamable-http" else "127.0.0.1",
+    port=MCP_PORT,
+    # 无状态模式：适配经 nginx 代理的远程客户端（无需会话粘滞）
+    stateless_http=(TRANSPORT == "streamable-http"),
+)
 
 
 @mcp.tool()
@@ -47,4 +53,4 @@ async def list_documents(layer: str = "") -> str:
 
 
 if __name__ == "__main__":
-    mcp.run()
+    mcp.run(transport=TRANSPORT)

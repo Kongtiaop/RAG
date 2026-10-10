@@ -47,8 +47,26 @@ services:
     restart: unless-stopped
     depends_on:
       - api
+    environment:
+      MCP_TOKEN: ${MCP_TOKEN:-}   # nginx envsubst 注入门禁；未设置则 /mcp/ 一律 403
     ports:
       - "80:80"                 # 对外入口
+
+  mcp:
+    image: ghcr.io/kongtiaop/agentic-rag-backend:latest
+    container_name: agentic_rag_mcp
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://agentic_rag:${POSTGRES_PASSWORD:-agentic_rag}@postgres:5432/agentic_rag
+      DASHSCOPE_API_KEY: ${DASHSCOPE_API_KEY}
+      MCP_TRANSPORT: streamable-http
+      MCP_PORT: "9001"
+    command: ["python", "-m", "app.mcp_server"]
+    ports:
+      - "127.0.0.1:9001:9001"   # 由 frontend nginx 反代对外（/mcp/ + token）
 
 volumes:
   pgdata:
