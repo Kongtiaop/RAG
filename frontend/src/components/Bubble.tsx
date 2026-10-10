@@ -22,6 +22,7 @@ export default function Bubble({ onOpenDoc }: Props) {
   const [runs, setRuns] = useState<RunSummary[]>([]);
   const [runDetail, setRunDetail] = useState<RunDetail | null>(null);
   const [runsLoading, setRunsLoading] = useState(false);
+  const [seedHistory, setSeedHistory] = useState<{ role: string; content: string }[]>([]);
   const tokenBuf = useRef("");                        // 已到未吐的 token 缓冲
   const displayedRef = useRef("");                    // 已吐出的完整文本（避免闭包读旧 state）
   const typingRef = useRef(false);
@@ -71,11 +72,13 @@ export default function Bubble({ onOpenDoc }: Props) {
     typingRef.current = true;
     scrollBottom();
     try {
-      // 多轮：把已完成的问答（最多 3 轮）作为 history 传给后端
-      const history = messages
-        .filter((m) => !m.running && m.text)
-        .slice(-6)
-        .map((m) => ({ role: m.role, content: m.text }));
+      // 多轮：历史种子（从回放载入）+ 已完成的问答（最多 3 轮）
+      const history = [
+        ...seedHistory,
+        ...messages
+          .filter((m) => !m.running && m.text)
+          .map((m) => ({ role: m.role, content: m.text })),
+      ].slice(-6);
       const res = await streamChat(
         q,
         history,
@@ -143,7 +146,13 @@ export default function Bubble({ onOpenDoc }: Props) {
           {mode === "chat" ? (
             <>
               <div className="bubble-list" ref={listRef}>
-                {messages.length === 0 && (
+                {seedHistory.length > 0 && (
+                  <div className="seed-banner">
+                    📎 已载入历史对话「{seedHistory[0].content.slice(0, 16)}…」为上下文
+                    <button className="seed-clear" onClick={() => setSeedHistory([])}>×</button>
+                  </div>
+                )}
+                {messages.length === 0 && seedHistory.length === 0 && (
                   <div className="hint">试试：「什么是受限 ReAct？」「MCP 有哪几种传输方式？」</div>
                 )}
                 {messages.map((m, i) => (
@@ -212,6 +221,20 @@ export default function Bubble({ onOpenDoc }: Props) {
                       ))}
                     </div>
                   )}
+                  <button
+                    className="continue-btn"
+                    onClick={() => {
+                      // 把这轮问答作为上下文种子，回到对话模式继续追问
+                      setSeedHistory([
+                        { role: "user", content: runDetail.question },
+                        { role: "assistant", content: runDetail.answer },
+                      ]);
+                      setRunDetail(null);
+                      setMode("chat");
+                    }}
+                  >
+                    💬 以此为上下文继续提问
+                  </button>
                 </>
               )}
               {!runsLoading && !runDetail && runs.length === 0 && (

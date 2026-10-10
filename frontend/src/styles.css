@@ -86,3 +86,9 @@ body { margin: 0; font-family: system-ui, "Segoe UI", "Microsoft YaHei", sans-se
 .head-tab { border: 1px solid var(--border); background: transparent; border-radius: 12px; padding: 3px 12px; font-size: 12px; cursor: pointer; color: var(--muted); }
 .head-tab.active { background: var(--accent-soft); color: var(--accent); border-color: var(--accent); }
 .head-note { margin-left: auto; font-size: 11px; color: var(--muted); }
+
+/* 历史种子横幅与继续提问按钮 */
+.seed-banner { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--accent); background: var(--accent-soft); border-radius: 8px; padding: 6px 10px; margin-bottom: 10px; }
+.seed-clear { border: none; background: transparent; color: var(--muted); cursor: pointer; font-size: 14px; margin-left: auto; padding: 0 2px; }
+.continue-btn { width: 100%; margin-top: 10px; border: 1px solid var(--accent); background: var(--accent-soft); color: var(--accent); border-radius: 8px; padding: 7px; font-size: 12px; cursor: pointer; }
+.continue-btn:hover { background: var(--accent); color: #fff; }
