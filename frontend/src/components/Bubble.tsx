@@ -23,6 +23,7 @@ export default function Bubble({ onOpenDoc }: Props) {
   const [runDetail, setRunDetail] = useState<RunDetail | null>(null);
   const [runsLoading, setRunsLoading] = useState(false);
   const [seedHistory, setSeedHistory] = useState<{ role: string; content: string }[]>([]);
+  const seedRef = useRef<{ role: string; content: string }[]>([]);   // send 读 ref，避免闭包读到旧 state
   const tokenBuf = useRef("");                        // 已到未吐的 token 缓冲
   const displayedRef = useRef("");                    // 已吐出的完整文本（避免闭包读旧 state）
   const typingRef = useRef(false);
@@ -45,6 +46,21 @@ export default function Bubble({ onOpenDoc }: Props) {
       .finally(() => setRunsLoading(false));
   };
 
+  // 在回放视图直接发问：该轮问答自动成为上下文，无缝续聊
+  const continueFromRun = () => {
+    const q = input.trim();
+    if (!q || !runDetail || messages.some((m) => m.running)) return;
+    const seed = [
+      { role: "user", content: runDetail.question },
+      { role: "assistant", content: runDetail.answer },
+    ];
+    seedRef.current = seed;
+    setSeedHistory(seed);
+    setRunDetail(null);
+    setMode("chat");
+    send(q);
+  };
+
   // 打字机：每拍从缓冲搬若干字到显示区；缓冲有积压就持续吐，吐完自然停拍
   useEffect(() => {
     const timer = setInterval(() => {
@@ -60,8 +76,8 @@ export default function Bubble({ onOpenDoc }: Props) {
     return () => clearInterval(timer);
   }, []);
 
-  const send = async () => {
-    const q = input.trim();
+  const send = async (overrideQ?: string) => {
+    const q = (overrideQ ?? input).trim();
     if (!q || messages.some((m) => m.running)) return;
     setInput("");
     setMessages((m) => [...m, { role: "user", text: q } as ChatMessage, { role: "assistant", text: "", steps: [], citations: [], running: true }]);
@@ -72,9 +88,9 @@ export default function Bubble({ onOpenDoc }: Props) {
     typingRef.current = true;
     scrollBottom();
     try {
-      // 多轮：历史种子（从回放载入）+ 已完成的问答（最多 3 轮）
+      // 多轮：回放载入的上下文种子 + 当前线程已完成的问答（合计最多 3 轮）
       const history = [
-        ...seedHistory,
+        ...seedRef.current,
         ...messages
           .filter((m) => !m.running && m.text)
           .map((m) => ({ role: m.role, content: m.text })),
@@ -198,7 +214,7 @@ export default function Bubble({ onOpenDoc }: Props) {
                   onChange={(e) => setInput(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && send()}
                 />
-                <button onClick={send}>发送</button>
+                <button onClick={() => send()}>发送</button>
               </div>
             </>
           ) : (
@@ -221,20 +237,6 @@ export default function Bubble({ onOpenDoc }: Props) {
                       ))}
                     </div>
                   )}
-                  <button
-                    className="continue-btn"
-                    onClick={() => {
-                      // 把这轮问答作为上下文种子，回到对话模式继续追问
-                      setSeedHistory([
-                        { role: "user", content: runDetail.question },
-                        { role: "assistant", content: runDetail.answer },
-                      ]);
-                      setRunDetail(null);
-                      setMode("chat");
-                    }}
-                  >
-                    💬 以此为上下文继续提问
-                  </button>
                 </>
               )}
               {!runsLoading && !runDetail && runs.length === 0 && (
@@ -250,6 +252,17 @@ export default function Bubble({ onOpenDoc }: Props) {
                     </div>
                   </div>
                 ))}
+              {runDetail && (
+                <div className="bubble-input">
+                  <input
+                    value={input}
+                    placeholder="就此对话继续追问…"
+                    onChange={(e) => setInput(e.target.value)}
+                    onKeyDown={(e) => e.key === "Enter" && continueFromRun()}
+                  />
+                  <button onClick={continueFromRun}>发送</button>
+                </div>
+              )}
             </div>
           )}
         </div>
