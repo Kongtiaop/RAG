@@ -26,13 +26,13 @@ export default function App() {
       <header className="topbar">
         <div className="brand">叶先生的知识库</div>
         <div className="tabs">
-          {["blog", "basics"].map((l) => (
+          {["blog", "basics", "daily"].map((l) => (
             <button
               key={l}
               className={`tab ${layer === l ? "active" : ""}`}
               onClick={() => setLayer(l)}
             >
-              {l === "blog" ? "项目博客" : "基础知识"}
+              {l === "blog" ? "项目博客" : l === "basics" ? "基础知识" : "开源日报"}
             </button>
           ))}
         </div>

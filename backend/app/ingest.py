@@ -29,7 +29,7 @@ from .db import get_pool
 from .llm import embed_in_batches
 
 ROOT = Path(__file__).resolve().parents[2]
-LAYER_BY_DIR = {"docs/blog": "blog", "docs/basics": "basics"}
+LAYER_BY_DIR = {"docs/blog": "blog", "docs/basics": "basics", "docs/daily": "daily"}
 
 # 批量删除护栏阈值（pg_prefect 事故同款默认值）
 SYNC_DELETE_MAX_RATIO = 0.2
