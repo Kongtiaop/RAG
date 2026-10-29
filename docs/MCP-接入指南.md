@@ -2,8 +2,10 @@
 
 > 服务器端的 MCP 服务（`mcp` 容器，Streamable HTTP，端口 9001）随部署已就绪，
 > nginx 在 `/mcp` 路径上挂了 `X-MCP-Token` 门禁。本文只讲**客户端怎么接**。
-> 接入后，你可以在 WorkBuddy 的任何对话里调用 `search_docs` / `get_document` / `list_documents`
-> 三个工具，随时检索自己的博客、基础知识库和开源日报。
+> 接入后，你可以在 WorkBuddy 的任何对话里调用四个工具：
+> `search_docs`（三层混合检索，可用 `layers` 限定 blog/basics/daily）、
+> `latest_daily`（最近 N 天开源日报清单）、`get_document`（读全文）、
+> `list_documents`（文档清单），随时检索自己的博客、基础知识库和开源日报。
 
 ## 一、拿到访问令牌（token）
 
@@ -63,6 +65,20 @@ curl -s -o NUL -w "%{http_code}" -H "X-MCP-Token: 你的token" http://47.107.167
 3. 在 WorkBuddy 新开一个对话，问：**「帮我查查我博客里受限 ReAct 的设计动因」**——
    看到先调用 `search_docs` 再回答，即为全链路贯通（本配置已实测：
    `search_docs("受限 ReAct 的设计动因")` top1 命中 blog-01，score 0.80）。
+
+### 语料分三层，怎么查
+
+| 层 | 内容 | doc_id 形如 | 适用工具 |
+|---|---|---|---|
+| `blog` | 项目博客（设计决策与踩坑） | `blog-01` | `search_docs` |
+| `basics` | 通用基础知识 | `basics-15` | `search_docs` |
+| `daily` | 开源日报（每天 GitHub 趋势摘要） | `daily-20261029` | `latest_daily` + `get_document` |
+
+- **不给 `layers` 就是三层全查**（默认行为，模型一般无需显式指定）。
+- 想问"最近几天的日报"时，`latest_daily(days=7, limit=5)` 按日期倒序给清单，
+  再用 `get_document(doc_id)` 读某天全文——日报是时序语料，纯语义检索常常排不上来，
+  走清单比走向量稳。
+- `layers` 只接受 `blog|basics|daily`，传其他值会返回错误并附带可选值（不会静默忽略）。
 
 ## 五、接入其他 MCP 客户端
 
